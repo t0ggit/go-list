@@ -8,7 +8,8 @@ func main() {
 	l.Add(54)
 	l.Add(112)
 	l.Add(1337)
-	l.Del(1337123)
 	l.Print()
 
+	ll := list.NewList()
+	ll.Print()
 }

@@ -3,13 +3,21 @@ package list
 import "fmt"
 
 type List struct {
-	length    int64
-	firstNode *node
+	length    int64 // Текущая длина списка (количество узлов)
+	firstNode *node // Указатель на первый узел
+	lastNode  *node // Указатель на последний узел (для ускорения вставки элемента в конец)
+
+	/*
+		Счетчик идентификаторов,
+		растет по мере добавления, но не уменьшается при удалении элементов,
+		начинается с 1, т.е. первый вставленный узел будет иметь идентификатор 1.
+	*/
+	idCounter int64
 }
 
 // NewList создает новый пустой односвязный список
 func NewList() (l *List) {
-	return &List{length: 0, firstNode: nil}
+	return &List{length: 0, firstNode: nil, lastNode: nil, idCounter: 0}
 }
 
 // Len возвращает количество элементов в списке
@@ -18,35 +26,34 @@ func (l *List) Len() (len int64) {
 	return len
 }
 
-// Add добавляет элемент в конец списка, возвращает индекс добавленного элемента
+// Add добавляет элемент в конец списка, возвращает идентификатор добавленного элемента
 func (l *List) Add(data int64) (id int64) {
-	newNode := &node{value: data}
+	l.idCounter++
+	newNode := &node{value: data, id: l.idCounter}
 	l.length++
-	var currentID int64 = 0
 	nextNode := l.firstNode
 	if nextNode == nil {
 		l.firstNode = newNode
-		return currentID
+		l.lastNode = l.firstNode
+		return l.idCounter
 	}
-	for ; nextNode.nextNode != nil; nextNode = nextNode.nextNode {
-		currentID++
-	}
-	nextNode.nextNode = newNode
-	return currentID
+	l.lastNode.nextNode = newNode
+	l.lastNode = l.lastNode.nextNode
+	return l.idCounter
 }
 
-// RemoveByIndex удаляет элемент по индексу
-func (l *List) RemoveByIndex(id int64) (ok bool) {
+// RemoveByIndex удаляет элемент по индексу (текущему порядковому номеру)
+func (l *List) RemoveByIndex(index int64) (ok bool) {
 	if l.length == 0 || l.firstNode == nil {
 		return false
 	}
-	if l.length <= id {
+	if l.length <= index {
 		return false
 	}
 
 	var previousNode *node = nil
 	currentNode := l.firstNode
-	for currentIndex := int64(0); currentIndex < id; currentIndex++ {
+	for currentIndex := int64(0); currentIndex < index; currentIndex++ {
 		previousNode = currentNode
 		currentNode = currentNode.nextNode
 	}
@@ -59,6 +66,10 @@ func (l *List) RemoveByIndex(id int64) (ok bool) {
 	}
 	l.length--
 	return true
+}
+
+func (l *List) RemoveByID(id int64) (ok bool) {
+	return
 }
 
 // RemoveByValue удаляет первый встретившийся элемент с данным значением
@@ -90,17 +101,27 @@ func (l *List) RemoveAllByValue(value int64) {
 }
 
 // GetValueByIndex возвращает значение элемента с данным индексом
-func (l *List) GetValueByIndex(id int64) (value int64, ok bool) {
+func (l *List) GetValueByIndex(index int64) (value int64, ok bool) {
 	return
 }
 
-// GetIndexByValue возвращает индекс первого встретившегося элемента с данным значением
-func (l *List) GetIndexByValue(value int64) (id int64, ok bool) {
+// GetValueByID возвращает значение элемента с данным идентификатором
+func (l *List) GetValueByID(id int64) (value int64, ok bool) {
 	return
 }
 
-// GetAllIndicesByValue возвращает индексы всех элементов с данным значением
-func (l *List) GetAllIndicesByValue(value int64) (ids []int64, ok bool) {
+// GetIndexByValue возвращает индекс первого по порядку элемента с данным значением
+func (l *List) GetIndexByValue(value int64) (index int64, ok bool) {
+	return
+}
+
+// GetIDByValue возвращает идентификатор первого по порядку элемента с данным значением
+func (l *List) GetIDByValue(value int64) (id int64, ok bool) {
+	return
+}
+
+// GetAllIDsByValue возвращает индексы всех элементов с данным значением
+func (l *List) GetAllIDsByValue(value int64) (ids []int64, ok bool) {
 	return
 }
 

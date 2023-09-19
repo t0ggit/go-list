@@ -9,6 +9,7 @@ func TestNewList(t *testing.T) {
 	l := NewList()
 	assert.NotNil(t, l)
 	assert.Equal(t, int64(0), l.length, "New List should have 0 length.")
+	assert.Equal(t, int64(0), l.idCounter)
 	assert.Nil(t, l.firstNode, "New List should not have firstNode.")
 }
 
@@ -25,7 +26,10 @@ func TestList_Add(t *testing.T) {
 	assert.Equal(t, int64(1), l.length)
 	assert.NotNil(t, l.firstNode)
 	assert.Equal(t, int64(42), l.firstNode.value)
+	assert.Equal(t, int64(1), l.idCounter)
+	assert.Equal(t, int64(1), l.firstNode.id)
 	assert.Nil(t, l.firstNode.nextNode)
+	assert.Equal(t, l.firstNode, l.lastNode)
 
 	l.Add(13)
 	assert.Equal(t, int64(2), l.Len())
@@ -34,7 +38,11 @@ func TestList_Add(t *testing.T) {
 	assert.Equal(t, int64(42), l.firstNode.value)
 	assert.NotNil(t, l.firstNode.nextNode)
 	assert.Equal(t, int64(13), l.firstNode.nextNode.value)
+	assert.Equal(t, int64(2), l.idCounter)
+	assert.Equal(t, int64(1), l.firstNode.id)
+	assert.Equal(t, int64(2), l.firstNode.nextNode.id)
 	assert.Nil(t, l.firstNode.nextNode.nextNode)
+	assert.Equal(t, l.firstNode.nextNode, l.lastNode)
 }
 
 func TestList_GetAll(t *testing.T) {

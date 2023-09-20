@@ -310,6 +310,22 @@ func TestList_RemoveByID(t *testing.T) {
 	assert.Equal(t, false, l.RemoveByID(2))
 }
 
+func TestList_RemoveByID2(t *testing.T) {
+	l := NewList()
+	l.Add(13)  // id: 1
+	l.Add(42)  // id: 2
+	l.Add(112) // id: 3
+	l.Add(256) // id: 4
+
+	assert.Equal(t, true, l.RemoveByID(4))
+	assert.Equal(t, int64(3), l.Len())
+	assert.Equal(t, int64(1), l.firstNode.id)
+	assert.Equal(t, int64(2), l.firstNode.nextNode.id)
+	assert.Equal(t, int64(3), l.firstNode.nextNode.nextNode.id)
+	assert.Equal(t, int64(3), l.lastNode.id)
+
+}
+
 func TestList_RemoveAllByValue(t *testing.T) {
 	l := NewList()
 	l.Add(13)
@@ -403,6 +419,19 @@ func TestList_GetValueByID(t *testing.T) {
 	assert.Equal(t, false, actualStatus)
 
 	actualValue, actualStatus = l.GetValueByID(-1)
+	assert.Equal(t, int64(0), actualValue)
+	assert.Equal(t, false, actualStatus)
+}
+
+func TestList_GetValueByID2(t *testing.T) {
+	l := NewList()
+	l.Add(13)  // id: 1
+	l.Add(42)  // id: 2
+	l.Add(112) // id: 3
+	l.Add(256) // id: 4
+	l.RemoveByID(3)
+
+	actualValue, actualStatus := l.GetValueByID(3)
 	assert.Equal(t, int64(0), actualValue)
 	assert.Equal(t, false, actualStatus)
 }

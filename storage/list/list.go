@@ -149,9 +149,6 @@ func (l *List) GetValueByIndex(index int64) (value int64, ok bool) {
 	}
 
 	currentNode := l.firstNode
-	if currentNode == nil {
-		return 0, false
-	}
 	for currentIndex := int64(0); currentIndex < index; currentIndex++ {
 		currentNode = currentNode.nextNode
 	}

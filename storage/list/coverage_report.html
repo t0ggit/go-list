@@ -1,0 +1,351 @@
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>list: Go Coverage Report</title>
+		<style>
+			body {
+				background: black;
+				color: rgb(80, 80, 80);
+			}
+			body, pre, #legend span {
+				font-family: Menlo, monospace;
+				font-weight: bold;
+			}
+			#topbar {
+				background: black;
+				position: fixed;
+				top: 0; left: 0; right: 0;
+				height: 42px;
+				border-bottom: 1px solid rgb(80, 80, 80);
+			}
+			#content {
+				margin-top: 50px;
+			}
+			#nav, #legend {
+				float: left;
+				margin-left: 10px;
+			}
+			#legend {
+				margin-top: 12px;
+			}
+			#nav {
+				margin-top: 10px;
+			}
+			#legend span {
+				margin: 0 5px;
+			}
+			.cov0 { color: rgb(192, 0, 0) }
+.cov1 { color: rgb(128, 128, 128) }
+.cov2 { color: rgb(116, 140, 131) }
+.cov3 { color: rgb(104, 152, 134) }
+.cov4 { color: rgb(92, 164, 137) }
+.cov5 { color: rgb(80, 176, 140) }
+.cov6 { color: rgb(68, 188, 143) }
+.cov7 { color: rgb(56, 200, 146) }
+.cov8 { color: rgb(44, 212, 149) }
+.cov9 { color: rgb(32, 224, 152) }
+.cov10 { color: rgb(20, 236, 155) }
+
+		</style>
+	</head>
+	<body>
+		<div id="topbar">
+			<div id="nav">
+				<select id="files">
+				
+				<option value="file0">list/storage/list/list.go (100.0%)</option>
+				
+				</select>
+			</div>
+			<div id="legend">
+				<span>not tracked</span>
+			
+				<span class="cov0">not covered</span>
+				<span class="cov8">covered</span>
+			
+			</div>
+		</div>
+		<div id="content">
+		
+		<pre class="file" id="file0" style="display: none">package list
+
+import (
+        "fmt"
+        "strconv"
+)
+
+type List struct {
+        length    int64 // Текущая длина списка (количество узлов)
+        firstNode *node // Указатель на первый узел
+        lastNode  *node // Указатель на последний узел (для ускорения вставки элемента в конец)
+
+        /*
+                Счетчик идентификаторов,
+                растет по мере добавления, но не уменьшается при удалении элементов,
+                начинается с 1, т.е. первый вставленный узел будет иметь идентификатор 1.
+        */
+        idCounter int64
+}
+
+// NewList создает новый пустой односвязный список
+func NewList() (l *List) <span class="cov8" title="1">{
+        return &amp;List{length: 0, firstNode: nil, lastNode: nil, idCounter: 0}
+}</span>
+
+// Len возвращает количество элементов в списке
+func (l *List) Len() (len int64) <span class="cov8" title="1">{
+        len = l.length
+        return len
+}</span>
+
+// Add добавляет элемент в конец списка, возвращает идентификатор добавленного элемента
+func (l *List) Add(data int64) (id int64) <span class="cov8" title="1">{
+        l.idCounter++
+        newNode := &amp;node{value: data, id: l.idCounter}
+        l.length++
+        nextNode := l.firstNode
+        if nextNode == nil </span><span class="cov8" title="1">{
+                l.firstNode = newNode
+                l.lastNode = l.firstNode
+                return l.idCounter
+        }</span>
+        <span class="cov8" title="1">l.lastNode.nextNode = newNode
+        l.lastNode = l.lastNode.nextNode
+        return l.idCounter</span>
+}
+
+// RemoveByIndex удаляет элемент по индексу (текущему порядковому номеру)
+func (l *List) RemoveByIndex(index int64) (ok bool) <span class="cov8" title="1">{
+        if l.length &lt;= index </span><span class="cov8" title="1">{
+                return false
+        }</span>
+
+        <span class="cov8" title="1">var previousNode *node = nil
+        currentNode := l.firstNode
+        for currentIndex := int64(0); currentIndex &lt; index; currentIndex++ </span><span class="cov8" title="1">{
+                previousNode = currentNode
+                currentNode = currentNode.nextNode
+        }</span>
+        <span class="cov8" title="1">if previousNode == nil </span><span class="cov8" title="1">{
+                l.firstNode = currentNode.nextNode
+                if l.firstNode == nil </span><span class="cov8" title="1">{
+                        l.lastNode = nil
+                }</span>
+        } else<span class="cov8" title="1"> if currentNode.nextNode != nil </span><span class="cov8" title="1">{
+                previousNode.nextNode = currentNode.nextNode
+        }</span> else<span class="cov8" title="1"> {
+                previousNode.nextNode = nil
+                l.lastNode = previousNode
+        }</span>
+        <span class="cov8" title="1">l.length--
+        return true</span>
+}
+
+// RemoveByID удаляет элемент по уникальному идентификатору
+func (l *List) RemoveByID(id int64) (ok bool) <span class="cov8" title="1">{
+        if l.firstNode == nil </span><span class="cov8" title="1">{
+                return false
+        }</span>
+
+        <span class="cov8" title="1">if l.firstNode.id == id </span><span class="cov8" title="1">{
+                if l.firstNode.nextNode == l.lastNode </span><span class="cov8" title="1">{
+                        l.lastNode = l.firstNode
+                }</span>
+                <span class="cov8" title="1">l.firstNode = l.firstNode.nextNode
+                if l.firstNode == nil </span><span class="cov8" title="1">{
+                        l.lastNode = nil
+                }</span>
+                <span class="cov8" title="1">l.length--
+                return true</span>
+        }
+
+        <span class="cov8" title="1">currentNode := l.firstNode
+        for ; currentNode.nextNode != nil &amp;&amp; currentNode.nextNode.id != id; currentNode = currentNode.nextNode </span>{<span class="cov8" title="1">
+        }</span>
+        <span class="cov8" title="1">if currentNode.nextNode == nil </span><span class="cov8" title="1">{
+                return false // not found
+        }</span>
+        <span class="cov8" title="1">if currentNode.nextNode == l.lastNode </span><span class="cov8" title="1">{
+                l.lastNode = currentNode
+        }</span>
+        <span class="cov8" title="1">currentNode.nextNode = currentNode.nextNode.nextNode
+        l.length--
+        return true</span>
+}
+
+// RemoveByValue удаляет первый встретившийся элемент с данным значением
+func (l *List) RemoveByValue(value int64) (ok bool) <span class="cov8" title="1">{
+        if l.firstNode == nil </span><span class="cov8" title="1">{
+                return false
+        }</span>
+
+        <span class="cov8" title="1">if l.firstNode.value == value </span><span class="cov8" title="1">{
+                if l.firstNode.nextNode == l.lastNode </span><span class="cov8" title="1">{
+                        l.lastNode = l.firstNode
+                }</span>
+                <span class="cov8" title="1">l.firstNode = l.firstNode.nextNode
+                if l.firstNode == nil </span><span class="cov8" title="1">{
+                        l.lastNode = nil
+                }</span>
+                <span class="cov8" title="1">l.length--
+                return true</span>
+        }
+
+        <span class="cov8" title="1">currentNode := l.firstNode
+        for ; currentNode.nextNode != nil &amp;&amp; currentNode.nextNode.value != value; currentNode = currentNode.nextNode </span>{<span class="cov8" title="1">
+        }</span>
+        <span class="cov8" title="1">if currentNode.nextNode == nil </span><span class="cov8" title="1">{
+                return false // not found
+        }</span>
+        <span class="cov8" title="1">if currentNode.nextNode == l.lastNode </span><span class="cov8" title="1">{
+                l.lastNode = currentNode
+        }</span>
+        <span class="cov8" title="1">currentNode.nextNode = currentNode.nextNode.nextNode
+        l.length--
+        return true</span>
+}
+
+// RemoveAllByValue удаляет все элементы с данным значением
+func (l *List) RemoveAllByValue(value int64) <span class="cov8" title="1">{
+        for l.RemoveByValue(value) </span>{<span class="cov8" title="1">
+        }</span>
+}
+
+// GetValueByIndex возвращает значение элемента с данным индексом
+func (l *List) GetValueByIndex(index int64) (value int64, ok bool) <span class="cov8" title="1">{
+        if index &gt;= l.Len() || index &lt; 0 </span><span class="cov8" title="1">{
+                return 0, false
+        }</span>
+
+        <span class="cov8" title="1">currentNode := l.firstNode
+        for currentIndex := int64(0); currentIndex &lt; index; currentIndex++ </span><span class="cov8" title="1">{
+                currentNode = currentNode.nextNode
+        }</span>
+        <span class="cov8" title="1">return currentNode.value, true</span>
+}
+
+// GetValueByID возвращает значение элемента с данным идентификатором
+func (l *List) GetValueByID(id int64) (value int64, ok bool) <span class="cov8" title="1">{
+        if id &gt; l.idCounter || id &lt;= 0 </span><span class="cov8" title="1">{
+                return 0, false
+        }</span>
+        <span class="cov8" title="1">currentNode := l.firstNode
+        for ; currentNode.id != id; currentNode = currentNode.nextNode </span><span class="cov8" title="1">{
+                if currentNode.nextNode == nil </span><span class="cov8" title="1">{
+                        return 0, false
+                }</span>
+        }
+        <span class="cov8" title="1">return currentNode.value, true</span>
+}
+
+// GetIndexByValue возвращает индекс первого по порядку элемента с данным значением
+// Если не находит элемента с данным значением, возвращает len и false
+func (l *List) GetIndexByValue(value int64) (index int64, ok bool) <span class="cov8" title="1">{
+        var (
+                currentIndex  int64 = 0
+                currentValue  int64
+                currentStatus bool
+        )
+        for ; ; currentIndex++ </span><span class="cov8" title="1">{
+                currentValue, currentStatus = l.GetValueByIndex(currentIndex)
+                if currentValue == value </span><span class="cov8" title="1">{
+                        return currentIndex, true
+                }</span>
+                <span class="cov8" title="1">if !currentStatus </span><span class="cov8" title="1">{
+                        return l.length, false
+                }</span>
+        }
+}
+
+// GetIDByValue возвращает идентификатор первого по порядку элемента с данным значением
+// Если не находит элемента с данным значением, возвращает 0 и false
+func (l *List) GetIDByValue(value int64) (id int64, ok bool) <span class="cov8" title="1">{
+        for currentNode := l.firstNode; currentNode != nil; currentNode = currentNode.nextNode </span><span class="cov8" title="1">{
+                if currentNode.value == value </span><span class="cov8" title="1">{
+                        return currentNode.id, true
+                }</span>
+        }
+        <span class="cov8" title="1">return 0, false</span>
+}
+
+// GetAllIDsByValue возвращает индексы всех элементов с данным значением
+// Если элементы с данным значением не найдены, возвращает nil и false
+func (l *List) GetAllIDsByValue(value int64) (ids []int64, ok bool) <span class="cov8" title="1">{
+        for currentNode := l.firstNode; currentNode != nil; currentNode = currentNode.nextNode </span><span class="cov8" title="1">{
+                if currentNode.value == value </span><span class="cov8" title="1">{
+                        ids = append(ids, currentNode.id)
+                }</span>
+        }
+        <span class="cov8" title="1">if len(ids) == 0 </span><span class="cov8" title="1">{
+                return nil, false
+        }</span>
+        <span class="cov8" title="1">return ids, true</span>
+}
+
+// GetAll возвращает значения всех элементов
+func (l *List) GetAll() (values []int64, ok bool) <span class="cov8" title="1">{
+        if l.length == 0 || l.firstNode == nil </span><span class="cov8" title="1">{
+                return nil, false
+        }</span>
+
+        <span class="cov8" title="1">for currentNode := l.firstNode; currentNode != nil; currentNode = currentNode.nextNode </span><span class="cov8" title="1">{
+                values = append(values, currentNode.value)
+        }</span>
+        <span class="cov8" title="1">return values, true</span>
+}
+
+// Clear удаляет все элементы из списка
+func (l *List) Clear() <span class="cov8" title="1">{
+        l.firstNode = nil
+        l.lastNode = nil
+        l.length = 0
+}</span>
+
+// Print выводит список в консоль
+func (l *List) Print() <span class="cov8" title="1">{
+        if l.Len() == int64(0) </span><span class="cov8" title="1">{
+                fmt.Printf("[]\n")
+                return
+        }</span>
+        <span class="cov8" title="1">fmt.Printf("[")
+        currentNode := l.firstNode
+        for ; currentNode.nextNode != nil; currentNode = currentNode.nextNode </span><span class="cov8" title="1">{
+                fmt.Printf(strconv.FormatInt(currentNode.value, 10) + ", ")
+        }</span>
+        <span class="cov8" title="1">fmt.Printf(strconv.FormatInt(currentNode.value, 10) + "]\n")
+        return</span>
+}
+</pre>
+		
+		</div>
+	</body>
+	<script>
+	(function() {
+		var files = document.getElementById('files');
+		var visible;
+		files.addEventListener('change', onChange, false);
+		function select(part) {
+			if (visible)
+				visible.style.display = 'none';
+			visible = document.getElementById(part);
+			if (!visible)
+				return;
+			files.value = part;
+			visible.style.display = 'block';
+			location.hash = part;
+		}
+		function onChange() {
+			select(files.value);
+			window.scrollTo(0, 0);
+		}
+		if (location.hash != "") {
+			select(location.hash.substr(1));
+		}
+		if (!visible) {
+			select("file0");
+		}
+	})();
+	</script>
+</html>

@@ -2,6 +2,8 @@ package list
 
 import (
 	"fmt"
+	"list/storage"
+	"reflect"
 	"strconv"
 	"sync"
 )
@@ -11,12 +13,8 @@ type List struct {
 	firstNode *node // Указатель на первый узел
 	lastNode  *node // Указатель на последний узел (для ускорения вставки элемента в конец)
 
-	/*
-		Счетчик идентификаторов,
-		растет по мере добавления, но не уменьшается при удалении элементов,
-		начинается с 1, т.е. первый вставленный узел будет иметь идентификатор 1.
-	*/
 	idCounter int64
+	V         reflect.Type
 	mu        sync.RWMutex
 }
 
@@ -34,7 +32,12 @@ func (l *List) Len() (len int64) {
 }
 
 // Add добавляет элемент в конец списка, возвращает идентификатор добавленного элемента
-func (l *List) Add(data int64) (id int64) {
+func (l *List) Add(data any) (id int64, err error) {
+	if l.V != nil {
+		l.V = reflect.TypeOf(data)
+	} else if l.V != reflect.TypeOf(data) {
+		return 0, storage.ErrMismatchType
+	}
 	l.mu.Lock()
 	defer l.mu.Unlock()
 	l.idCounter++
@@ -44,11 +47,11 @@ func (l *List) Add(data int64) (id int64) {
 	if nextNode == nil {
 		l.firstNode = newNode
 		l.lastNode = l.firstNode
-		return l.idCounter
+		return l.idCounter, nil
 	}
 	l.lastNode.nextNode = newNode
 	l.lastNode = l.lastNode.nextNode
-	return l.idCounter
+	return l.idCounter, nil
 }
 
 // RemoveByIndex удаляет элемент по индексу (текущему порядковому номеру)
@@ -77,6 +80,9 @@ func (l *List) RemoveByIndex(index int64) (ok bool) {
 		l.lastNode = previousNode
 	}
 	l.length--
+	if l.Len() == 0 {
+		l.V = nil
+	}
 	return true
 }
 
@@ -84,6 +90,7 @@ func (l *List) RemoveByIndex(index int64) (ok bool) {
 func (l *List) RemoveByID(id int64) (ok bool) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
+
 	if l.firstNode == nil {
 		return false
 	}
@@ -97,6 +104,9 @@ func (l *List) RemoveByID(id int64) (ok bool) {
 			l.lastNode = nil
 		}
 		l.length--
+		if l.Len() == 0 {
+			l.V = nil
+		}
 		return true
 	}
 
@@ -111,17 +121,23 @@ func (l *List) RemoveByID(id int64) (ok bool) {
 	}
 	currentNode.nextNode = currentNode.nextNode.nextNode
 	l.length--
+	if l.Len() == 0 {
+		l.V = nil
+	}
 	return true
 }
 
 // RemoveByValue удаляет первый встретившийся элемент с данным значением
-func (l *List) RemoveByValue(value int64) (ok bool) {
+func (l *List) RemoveByValue(value any) (ok bool) {
+	if l.V != reflect.TypeOf(value) {
+		return false
+	}
 	l.mu.Lock()
 	defer l.mu.Unlock()
 	return l.removeByValueImmediately(value)
 }
 
-func (l *List) removeByValueImmediately(value int64) (ok bool) {
+func (l *List) removeByValueImmediately(value any) (ok bool) {
 	if l.firstNode == nil {
 		return false
 	}
@@ -135,6 +151,9 @@ func (l *List) removeByValueImmediately(value int64) (ok bool) {
 			l.lastNode = nil
 		}
 		l.length--
+		if l.Len() == 0 {
+			l.V = nil
+		}
 		return true
 	}
 
@@ -149,6 +168,9 @@ func (l *List) removeByValueImmediately(value int64) (ok bool) {
 	}
 	currentNode.nextNode = currentNode.nextNode.nextNode
 	l.length--
+	if l.Len() == 0 {
+		l.V = nil
+	}
 	return true
 }
 
@@ -164,7 +186,7 @@ func (l *List) RemoveAllByValue(value int64) {
 }
 
 // GetValueByIndex возвращает значение элемента с данным индексом
-func (l *List) GetValueByIndex(index int64) (value int64, ok bool) {
+func (l *List) GetValueByIndex(index int64) (value any, ok bool) {
 	l.mu.RLock()
 	defer l.mu.RUnlock()
 	if index >= l.Len() || index < 0 {
@@ -179,7 +201,7 @@ func (l *List) GetValueByIndex(index int64) (value int64, ok bool) {
 }
 
 // GetValueByID возвращает значение элемента с данным идентификатором
-func (l *List) GetValueByID(id int64) (value int64, ok bool) {
+func (l *List) GetValueByID(id int64) (value any, ok bool) {
 	l.mu.RLock()
 	defer l.mu.RUnlock()
 	if id > l.idCounter || id <= 0 {
@@ -201,7 +223,7 @@ func (l *List) GetIndexByValue(value int64) (index int64, ok bool) {
 	defer l.mu.RUnlock()
 	var (
 		currentIndex  int64 = 0
-		currentValue  int64
+		currentValue  any
 		currentStatus bool
 	)
 	for ; ; currentIndex++ {
@@ -245,7 +267,7 @@ func (l *List) GetAllIDsByValue(value int64) (ids []int64, ok bool) {
 }
 
 // GetAll возвращает значения всех элементов
-func (l *List) GetAll() (values []int64, ok bool) {
+func (l *List) GetAll() (values []any, ok bool) {
 	l.mu.RLock()
 	defer l.mu.RUnlock()
 	if l.length == 0 || l.firstNode == nil {
